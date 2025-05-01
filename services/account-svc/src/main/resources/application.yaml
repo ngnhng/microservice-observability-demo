@@ -1,5 +1,4 @@
 quarkus:
-
   management:
     enabled: true
 
@@ -62,3 +61,15 @@ quarkus:
     database:
       default-schema: public
 
+  mp:
+    messaging:
+      incoming:
+        transaction-initiated:
+          group:
+            id: account-svc
+          concurrency: 2
+          connector: smallrye-kafka
+          failure-strategy: dead-letter-queue
+          dead-letter-queue:
+            topic: transaction-initiated-dlq
+      outgoing:

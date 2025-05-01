@@ -1,12 +1,12 @@
 package org.nguyennn.account_svc.domain;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class Account {
     @NotNull(message = "Account ID cannot be null")
@@ -23,7 +23,7 @@ public class Account {
     private final AccountType type;
 
     @NotNull(message = "Balance cannot be null")
-    private BigDecimal balance;
+    private final BigDecimal balance;
 
     @NotNull(message = "Currency is required")
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a 3-letter ISO currency code")

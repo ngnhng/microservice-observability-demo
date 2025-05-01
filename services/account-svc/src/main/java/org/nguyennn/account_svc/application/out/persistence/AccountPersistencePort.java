@@ -1,4 +1,4 @@
-package org.nguyennn.account_svc.application.out;
+package org.nguyennn.account_svc.application.out.persistence;
 
 import java.util.List;
 import java.util.Optional;

@@ -3,7 +3,7 @@ package org.nguyennn.account_svc.adapter.out.persistence;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.nguyennn.account_svc.application.dto.CustomerAccounts;
-import org.nguyennn.account_svc.application.out.AccountPersistencePort;
+import org.nguyennn.account_svc.application.out.persistence.AccountPersistencePort;
 import org.nguyennn.account_svc.domain.Account;
 
 import java.util.List;
@@ -38,12 +38,11 @@ public class AccountPersistenceImpl implements AccountPersistencePort {
 
     @Override
     public CustomerAccounts findByCustomerId(UUID customerId, int offset, int limit) {
-        List<AccountEntity> entities = accountRepository.findByCustomerId(customerId, offset, limit);
+        List<AccountEntity> entities =
+                accountRepository.findByCustomerId(customerId, offset, limit);
         long totalCount = accountRepository.countByCustomerId(customerId);
 
-        List<Account> accounts = entities.stream()
-                .map(AccountEntity::toDomain)
-                .toList();
+        List<Account> accounts = entities.stream().map(AccountEntity::toDomain).toList();
 
         return new CustomerAccounts(customerId, totalCount, accounts);
     }
@@ -51,9 +50,7 @@ public class AccountPersistenceImpl implements AccountPersistencePort {
     @Override
     public List<Account> findByStatus(Account.AccountStatus status) {
         List<AccountEntity> entities = accountRepository.findByStatus(status);
-        return entities.stream()
-                .map(AccountEntity::toDomain)
-                .toList();
+        return entities.stream().map(AccountEntity::toDomain).toList();
     }
 
     @Override

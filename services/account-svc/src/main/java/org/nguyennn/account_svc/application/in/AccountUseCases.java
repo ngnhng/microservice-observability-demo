@@ -1,9 +1,11 @@
 package org.nguyennn.account_svc.application.in;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import org.nguyennn.account_svc.application.dto.AccountBalanceUpdateResult;
+import org.nguyennn.account_svc.application.dto.AccountBalanceVericationResult;
 import org.nguyennn.account_svc.application.dto.CustomerAccounts;
 import org.nguyennn.account_svc.domain.Account;
 
@@ -45,13 +47,11 @@ public interface AccountUseCases {
      * Get a paginated list of accounts for a specific customer
      *
      * @param customerId the customer ID
-     * @param offset     the starting position for pagination
-     * @param limit      the maximum number of items to return
+     * @param offset the starting position for pagination
+     * @param limit the maximum number of items to return
      * @return customer accounts with pagination info
      */
-    CustomerAccounts getAccountsByCustomerId(
-            @NotNull UUID customerId,
-            @PositiveOrZero int offset,
+    CustomerAccounts getAccountsByCustomerId(@NotNull UUID customerId, @PositiveOrZero int offset,
             @Min(value = 1) int limit);
 
     /**
@@ -76,4 +76,21 @@ public interface AccountUseCases {
      * @param accountId the ID of the account to delete
      */
     void deleteAccount(@NotNull UUID accountId);
+
+    /**
+     * Update the balance of an account. Must be idempotent.
+     *
+     * @param accountId the ID of the account to update
+     * @param amount the amount to update
+     */
+    AccountBalanceUpdateResult updateAccountBalance(UUID accountId, double amount);
+
+    /**
+     * Verify the balance of an account. Must be idempotent.
+     *
+     * @param accountId the ID of the account to verify
+     * @param amount the amount to verify
+     */
+
+    AccountBalanceVericationResult verifyAccountBalance(UUID accountId, BigDecimal amount);
 }

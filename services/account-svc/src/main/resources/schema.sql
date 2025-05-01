@@ -39,16 +39,30 @@ LANGUAGE plpgsql;
 CREATE TABLE customers
 (
     customer_id  UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
-    first_name   VARCHAR(100),
-    last_name    VARCHAR(100),
-    email        VARCHAR(255) UNIQUE      NOT NULL,
-    phone_number VARCHAR(50),
+    first_name   TEXT,
+    last_name    TEXT,
+    email        TEXT UNIQUE      NOT NULL,
+    phone_number TEXT,
     address      TEXT,
     kyc_status   customer_kyc_status_enum NOT NULL,
     risk_level   customer_risk_level_enum NOT NULL,
     created_at   TIMESTAMPTZ              NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMPTZ              NOT NULL DEFAULT NOW()
 );
+
+-- Add length constraints to text fields
+ALTER TABLE customers
+    ADD CONSTRAINT chk_customers_first_name_length CHECK (char_length(first_name) <= 50),
+    ADD CONSTRAINT chk_customers_last_name_length CHECK (char_length(last_name) <= 50),
+    ADD CONSTRAINT chk_customers_email_length CHECK (char_length(email) <= 100),
+    ADD CONSTRAINT chk_customers_phone_number_length CHECK (char_length(phone_number) <= 20),
+    ADD CONSTRAINT chk_customers_address_length CHECK (char_length(address) <= 255);
+-- Add check constraint for email format
+ALTER TABLE customers
+    ADD CONSTRAINT chk_customers_email_format CHECK (email ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$');
+-- Add check constraint for phone number format
+ALTER TABLE customers
+    ADD CONSTRAINT chk_customers_phone_number_format CHECK (phone_number ~ '^\+?[0-9]{1,3}?[0-9]{4,14}$');
 
 -- Trigger for customers table
 CREATE TRIGGER set_customer_timestamp
@@ -63,14 +77,18 @@ CREATE TABLE accounts
 (
     account_id     UUID PRIMARY KEY             DEFAULT gen_random_uuid(),
     customer_id    UUID                NOT NULL REFERENCES customers (customer_id),
-    account_number VARCHAR(50) UNIQUE  NOT NULL,
+    account_number TEXT UNIQUE  NOT NULL,
     account_type   account_type_enum   NOT NULL,
-    currency       CHAR(3)             NOT NULL,                                   -- ISO 4217 currency code (e.g., 'USD', 'EUR')
+    currency       TEXT             NOT NULL,                                   -- ISO 4217 currency code (e.g., 'USD', 'EUR')
     balance        DECIMAL(19, 4)      NOT NULL DEFAULT 0.00 CHECK (balance >= 0), -- Added non-negative check
     status         account_status_enum NOT NULL,
     created_at     TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ         NOT NULL DEFAULT NOW()
 );
+-- Add length constraints to text fields
+ALTER TABLE accounts
+    ADD CONSTRAINT chk_accounts_account_number_length CHECK (char_length(account_number) <= 50),
+    ADD CONSTRAINT chk_accounts_currency_length CHECK (char_length(currency) == 3);
 
 -- Trigger for accounts table
 CREATE TRIGGER set_account_timestamp
@@ -88,17 +106,23 @@ CREATE TABLE transactions
     destination_account_id UUID REFERENCES accounts (account_id),
     transaction_type       transaction_type_enum   NOT NULL,
     amount                 DECIMAL(19, 4)          NOT NULL CHECK (amount > 0),
-    currency               CHAR(3)                 NOT NULL,
+    currency               TEXT                    NOT NULL,
     description            TEXT,
     status                 transaction_status_enum NOT NULL,
     failure_reason         TEXT,
     fraud_score            SMALLINT CHECK (fraud_score IS NULL OR (fraud_score >= 0 AND fraud_score <= 100)),
     initiated_at           TIMESTAMPTZ             NOT NULL DEFAULT NOW(),
     completed_at           TIMESTAMPTZ,         -- Timestamp when transaction reached a final state
-    idempotency_key        VARCHAR(100) UNIQUE, -- Key to prevent duplicate processing
+    idempotency_key        TEXT UNIQUE, -- Key to prevent duplicate processing
     -- Constraint to ensure at least one account is involved
     CONSTRAINT chk_transaction_accounts CHECK (source_account_id IS NOT NULL OR destination_account_id IS NOT NULL)
 );
+-- Add length constraints to text fields
+ALTER TABLE transactions
+    ADD CONSTRAINT chk_transactions_description_length CHECK (char_length(description) <= 255),
+    ADD CONSTRAINT chk_transactions_currency_length CHECK (char_length(currency) == 3),
+    ADD CONSTRAINT chk_transactions_failure_reason_length CHECK (char_length(failure_reason) <= 255),
+    ADD CONSTRAINT chk_transactions_idempotency_key_length CHECK (char_length(idempotency_key) <= 255);
 -- Note: No updated_at trigger for transactions as its state changes are typically tracked
 -- via the 'status' field and 'completed_at' timestamp. Ledger entries are immutable.
 
@@ -111,9 +135,12 @@ CREATE TABLE ledger_entries
     account_id      UUID                   NOT NULL REFERENCES accounts (account_id),
     entry_type      ledger_entry_type_enum NOT NULL,
     amount          DECIMAL(19, 4)         NOT NULL CHECK (amount > 0),
-    currency        CHAR(3)                NOT NULL,
+    currency        TEXT                   NOT NULL,
     entry_timestamp TIMESTAMPTZ            NOT NULL DEFAULT NOW() -- Timestamp of the ledger posting
 );
+-- Add length constraints to text fields
+ALTER TABLE ledger_entries
+    ADD CONSTRAINT chk_ledger_entries_currency_length CHECK (char_length(currency) == 3);
 -- Note: Ledger entries are typically immutable once created, so no updated_at.
 
 
